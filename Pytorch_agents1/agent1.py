@@ -41,8 +41,6 @@ class Network(torch.nn.Module):
 		y_pred = F.relu(y_pred)
 		# print(y_pred.shape)
 
-		# print("w2: ", self.w2.shape)
-
 		y_pred = F.linear(y_pred, self.w2, self.b2)
 		y_pred = F.relu(y_pred)
 		# print(y_pred.shape)
@@ -52,7 +50,6 @@ class Network(torch.nn.Module):
 		# print(y_pred.shape)
 
 		y_pred = F.linear(y_pred, self.w4, self.b4)
-		y_pred = F.log_softmax(y_pred, dim=1)
 		# print(y_pred.shape)
 		# print()
 
@@ -64,30 +61,32 @@ class Network(torch.nn.Module):
 
 
 
-def train(model, data, y, n_epochs=2):
+def train(model, x, y, n_train_loops, n_epochs=2):
 	learning_rate = .00001
 	for e in range(n_epochs):
 		print("epoch: ",e)
-		correct = 0
 
 		# start_time = time.time()
 		
-		for t in range(len(x)):
-			inputs, labels = x[t], y[t]
+		for t in range(n_train_loops):
+			inputs, labels = x, y
 			inputs, labels = Variable(inputs), Variable(labels)
 
 			# reformat data
-			inputs = inputs.squeeze().reshape(inputs.shape[0], inputs.shape[2]*inputs.shape[3])
+			# inputs = inputs.squeeze().reshape(inputs.shape[0], inputs.shape[2]*inputs.shape[3])
 
 			# forward pass
 			y_pred = model(inputs)
 
+			print("y: ", y)
+			print("y_pred: ", y_pred)
+
 			predicted = torch.argmax(y_pred.data, dim=1)
-			correct += (predicted == labels).sum()
 
 			# compute loss
-			loss_func = nn.CrossEntropyLoss()
-			loss = loss_func(y_pred, labels)
+			loss = (y_pred - y).pow(2).sum()
+			print(t, loss.item())
+			print()
 
 			# use autograd to compute backprop.
 			# computes gradient of loss with respect to all tensors with requires_grad=True.
@@ -119,22 +118,23 @@ def train(model, data, y, n_epochs=2):
 		# elapsed_time = time.time() - start_time
 		# print("epoch time: ", elapsed_time)
 
-		print('Accuracy: ', 100 * correct / len(trainset))
-
 
 
 # N is batch size; D_in is input dimension;
 # H is hidden dimension; D_out is output dimension.
-BATCH_SIZE = 10
-N, D_in, H, D_out = BATCH_SIZE, 784, 50, 10
-n_epochs = 20
+
+BATCH_SIZE = 1
+N, D_in, H, D_out = BATCH_SIZE, 20, 50, 10
+n_epochs = 1
 
 # random tensor for input and output data.
 # leaving requires_grad=False because we don't need to compute gradients here.
 x = torch.rand(N, D_in, device=device, dtype=dtype)
-y = torch.rand(N, D_out, device=device, dtype=dtype)
+y = torch.randn(N, D_out, device=device, dtype=dtype)
+# print(x)
+# print(y)
 
 
 model = Network(D_in, H, D_out)
 
-train(model, x, y, n_epochs)
+train(model, x, y, 100, n_epochs)
