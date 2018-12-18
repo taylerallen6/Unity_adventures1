@@ -62,6 +62,8 @@ class Network(torch.nn.Module):
 
 
 def train(model, x, y, n_train_loops, n_epochs=2):
+	loss_func = nn.MSELoss()
+
 	learning_rate = .00001
 	for e in range(n_epochs):
 		print("epoch: ",e)
@@ -84,7 +86,7 @@ def train(model, x, y, n_train_loops, n_epochs=2):
 			predicted = torch.argmax(y_pred.data, dim=1)
 
 			# compute loss
-			loss = (y_pred - y).pow(2).sum()
+			loss = loss_func(y_pred, y)
 			print(t, loss.item())
 			print()
 
